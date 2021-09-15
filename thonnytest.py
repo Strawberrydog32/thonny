@@ -8,11 +8,20 @@ import time
 import random
 import math
 
-"""
+
 class player:
-    def __init__(self):
-        self.LED = DigitalOutput()
-"""
+    def __init__(self, Led_port, Button):
+        
+        self.Led = DigitalOutput()
+        self.Led.setHubPort(Led_port)
+        self.Led.setIsHubPortDevice(True)
+        
+        self.Button = DigitalInput()
+        self.Button.setHubPort(Button_port)
+        self.Led.setIsHubPortDevice(True)
+        
+        self.score = 0
+
 
 #Create 
 redLED = DigitalOutput()
