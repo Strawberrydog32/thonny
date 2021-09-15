@@ -1,13 +1,12 @@
-  
-#Add Phidgets Library 
 from Phidget22.Phidget import *
 from Phidget22.Devices.DigitalOutput import *
 from Phidget22.Devices.DigitalInput import *
-#Required for sleep statement
 import time
 import random
 import math
 
+
+WINSCORE = 1000
 
 class player:
     def __init__(self, Led_port, Button):
@@ -24,89 +23,43 @@ class player:
         
         self.score = 0
         self.previous_state = None
+        
+    def update(self):
+        self.Led.setState(self.Button.getState())
+        
+    @classmethod
+    def flash(cls, players, count, delay): #update this to be a class method
+        for a in range(count)
+            [i.Led.setState(True) for i in players]
+            time.sleep(delay)
+            [i.Led.setState(False) for i in players]
+            time.sleep(delay)
 
 
-#Create 
-redLED = DigitalOutput()
-greenLED = DigitalOutput()
-redBUTTON = DigitalInput()
-greenBUTTON = DigitalInput()
 
-#Address '
-greenLED.setHubPort(0)
-redLED.setHubPort(1)
-redBUTTON.setHubPort(2)
-greenBUTTON.setHubPort(3)
-
-greenLED.setIsHubPortDevice(True)
-redLED.setIsHubPortDevice(True)
-redBUTTON.setIsHubPortDevice(True)
-greenBUTTON.setIsHubPortDevice(True)
-
-#Open 
-redLED.openWaitForAttachment(1000)
-greenLED.openWaitForAttachment(1000)
-redBUTTON.openWaitForAttachment(1000)
-greenBUTTON.openWaitForAttachment(1000)
-#Use your Phidgets
+red = player(0, 2)
+green = player(1, 3)
+players = [red, green]
 playing = False
-scoreG = 0
-scoreR = 0
-g = None
-r = None
-winScore = 1000
+
 while(True):
-    redLED.setState(redBUTTON.getState())
-    greenLED.setState(greenBUTTON.getState())
+    [i.update() for i in players]
     if playing:
-        if scoreG > winScore or scoreR > winScore:
-            redLED.setState(False)
-            greenLED.setState(False)
+        if any([(i.score >= WINSCORE) for i in players]):
             playing = False
-            if scoreG > scoreR:
-                for i in range(5):
-                    greenLED.setState(True)
-                    time.sleep(0.5)
-                    greenLED.setState(False)
-                    time.sleep(0.5)
-            elif scoreR > scoreG:
-                for i in range(5):
-                    redLED.setState(True)
-                    time.sleep(0.5)
-                    redLED.setState(False)
-                    time.sleep(0.5)
-            else:
-                for i in range(5):
-                    redLED.setState(True)
-                    greenLED.setState(True)
-                    time.sleep(0.5)
-                    redLED.setState(False)
-                    greenLED.setState(False)
-                    time.sleep(0.5)
+            player.flash([sorted(players, key=lambda x: x.score)[0]], 3, 0.5)
             scoreG = 0
             scoreR = 0
         else:
-            if g and not greenBUTTON.getState():
-                scoreG += 1
-                print("Red Score: " + str(scoreR) + " Green Score: " + str(scoreG))
-                g = False
-            elif not g and greenBUTTON.getState():
-                g = True
+            for i in players:
+                if i.previous_state and not i.Button.getState():
+                    i.score += 1
+                    print("Red Score: " + str(scoreR) + " Green Score: " + str(scoreG))
                 
-            if r and not redBUTTON.getState():
-                scoreR += 1
-                print("Red Score: " + str(scoreR) + " Green Score: " + str(scoreG))
-                r = False
-            elif not g and redBUTTON.getState():
-                r = True
+            [i.previous_state = i.Button.getState() for i in players]
         
     else:
-        if greenBUTTON.getState() and redBUTTON.getState():
+        if all(i.Button.getState() for i in players):
             for i in range(3):
-                redLED.setState(True)
-                greenLED.setState(True)
-                time.sleep(1)
-                redLED.setState(False)
-                greenLED.setState(False)
-                time.sleep(1)
+                player.flash(players, 3, 0.5)
             playing = True
