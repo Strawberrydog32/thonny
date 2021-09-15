@@ -26,10 +26,13 @@ class player:
         
     def update(self):
         self.Led.setState(self.Button.getState())
+
+    def set_previous_state(self, state):
+        self.previous_state = state
         
     @classmethod
     def flash(cls, players, count, delay): #update this to be a class method
-        for a in range(count)
+        for a in range(count):
             [i.Led.setState(True) for i in players]
             time.sleep(delay)
             [i.Led.setState(False) for i in players]
@@ -56,7 +59,7 @@ while(True):
                     i.score += 1
                     print("Red Score: " + str(scoreR) + " Green Score: " + str(scoreG))
                 
-            [i.previous_state = i.Button.getState() for i in players]
+            [(i.set_previous_state(i.Button.getState())) for i in players]
         
     else:
         if all(i.Button.getState() for i in players):
