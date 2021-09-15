@@ -15,12 +15,15 @@ class player:
         self.Led = DigitalOutput()
         self.Led.setHubPort(Led_port)
         self.Led.setIsHubPortDevice(True)
+        self.Led.openWaitForAttachment(1000)
         
         self.Button = DigitalInput()
         self.Button.setHubPort(Button_port)
-        self.Led.setIsHubPortDevice(True)
+        self.Button.setIsHubPortDevice(True)
+        self.Button.openWaitForAttachment(1000)
         
         self.score = 0
+        self.previous_state = None
 
 
 #Create 
