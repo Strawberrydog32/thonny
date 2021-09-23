@@ -1,112 +1,98 @@
-  
-#Add Phidgets Library 
-from Phidget22.Phidget import *
-from Phidget22.Devices.DigitalOutput import *
-from Phidget22.Devices.DigitalInput import *
-#Required for sleep statement
+"""
+Docstring
+"""
+import sys
 import time
-import random
-import math
+
+# import random
+# import math
+# from Phidget22.Phidget import  *
+from Phidget22.Devices.DigitalOutput import DigitalOutput
+from Phidget22.Devices.DigitalInput import DigitalInput
 
 
-class player:
-    def __init__(self, Led_port, Button):
-        
-        self.Led = DigitalOutput()
-        self.Led.setHubPort(Led_port)
-        self.Led.setIsHubPortDevice(True)
-        self.Led.openWaitForAttachment(1000)
-        
-        self.Button = DigitalInput()
-        self.Button.setHubPort(Button_port)
-        self.Button.setIsHubPortDevice(True)
-        self.Button.openWaitForAttachment(1000)
-        
+WINSCORE = 10
+
+
+class Logger:
+    """
+    A Logger for debugging
+    """
+    def __init__(self, file=sys.stdout):
+        self.out_file = file
+        self.log_levels
+
+    def set_level(self, level):
+        if level in self.log_levels:
+            
+
+    def log(self, message, level="info"):
+        print(message, file=self.out_file)
+
+
+class Player:
+    def __init__(self, Led_port, Button_port, name):
+        self.name = name
+
+        self.led = DigitalOutput()
+        self.led.setHubPort(Led_port)
+        self.led.setIsHubPortDevice(True)
+        self.led.openWaitForAttachment(1000)
+
+        self.button = DigitalInput()
+        self.button.setHubPort(Button_port)
+        self.button.setIsHubPortDevice(True)
+        self.button.openWaitForAttachment(1000)
+
         self.score = 0
         self.previous_state = None
 
+    def update(self):
+        self.led.setState(self.button.getState())
 
-#Create 
-redLED = DigitalOutput()
-greenLED = DigitalOutput()
-redBUTTON = DigitalInput()
-greenBUTTON = DigitalInput()
+    def set_previous_state(self, state):
+        self.previous_state = state
 
-#Address '
-greenLED.setHubPort(0)
-redLED.setHubPort(1)
-redBUTTON.setHubPort(2)
-greenBUTTON.setHubPort(3)
+    def reset(self):
+        self.score = 0
+        self.previous_state = None
 
-greenLED.setIsHubPortDevice(True)
-redLED.setIsHubPortDevice(True)
-redBUTTON.setIsHubPortDevice(True)
-greenBUTTON.setIsHubPortDevice(True)
+    @classmethod
+    def flash(cls, players, count, delay):  # update this to be a class method
+        for a in range(count):
+            for player in players:
+                i.led.setState(True)
+            time.sleep(delay)
+            for player in players:
+                i.led.setState(False)
+            time.sleep(delay)
 
-#Open 
-redLED.openWaitForAttachment(1000)
-greenLED.openWaitForAttachment(1000)
-redBUTTON.openWaitForAttachment(1000)
-greenBUTTON.openWaitForAttachment(1000)
-#Use your Phidgets
+logger = Logger()
+red = Player(0, 2, "Red")
+green = Player(1, 3, "Green")
+PLAYERS = [red, green]
 playing = False
-scoreG = 0
-scoreR = 0
-g = None
-r = None
-winScore = 1000
-while(True):
-    redLED.setState(redBUTTON.getState())
-    greenLED.setState(greenBUTTON.getState())
+
+while True:
+    for i in PLAYERS:
+        i.update()
     if playing:
-        if scoreG > winScore or scoreR > winScore:
-            redLED.setState(False)
-            greenLED.setState(False)
+        if any(((i.score >= WINSCORE) for i in PLAYERS)):
             playing = False
-            if scoreG > scoreR:
-                for i in range(5):
-                    greenLED.setState(True)
-                    time.sleep(0.5)
-                    greenLED.setState(False)
-                    time.sleep(0.5)
-            elif scoreR > scoreG:
-                for i in range(5):
-                    redLED.setState(True)
-                    time.sleep(0.5)
-                    redLED.setState(False)
-                    time.sleep(0.5)
-            else:
-                for i in range(5):
-                    redLED.setState(True)
-                    greenLED.setState(True)
-                    time.sleep(0.5)
-                    redLED.setState(False)
-                    greenLED.setState(False)
-                    time.sleep(0.5)
-            scoreG = 0
-            scoreR = 0
+            Player.flash([sorted(PLAYERS, key=lambda x: x.score)[0]], 3, 0.5)
+            for i in PLAYERS:
+                i.reset()
+
         else:
-            if g and not greenBUTTON.getState():
-                scoreG += 1
-                print("Red Score: " + str(scoreR) + " Green Score: " + str(scoreG))
-                g = False
-            elif not g and greenBUTTON.getState():
-                g = True
-                
-            if r and not redBUTTON.getState():
-                scoreR += 1
-                print("Red Score: " + str(scoreR) + " Green Score: " + str(scoreG))
-                r = False
-            elif not g and redBUTTON.getState():
-                r = True
-        
+            for i in PLAYERS:
+                if i.previous_state and not i.button.getState():
+                    i.score += 1
+                    # print("Red Score: " + str(scoreR) + " Green Score: " + str(scoreG))
+
+            for i in PLAYERS:
+                i.set_previous_state(i.button.getState())
+
     else:
-        if greenBUTTON.getState() and redBUTTON.getState():
-            for i in range(3):
-                redLED.setState(True)
-                greenLED.setState(True)
-                time.sleep(1)
-                redLED.setState(False)
-                greenLED.setState(False)
-                time.sleep(1)
+        if all(i.button.getState() for i in PLAYERS):
+            Player.flash(PLAYERS, 3, 0.5)
             playing = True
